@@ -67,6 +67,10 @@
 
 *  **Cross delegation** - Cross delegation is also supported.
   
+## Community
+
+https://www.reddit.com/r/CyberAcid/
+
 
 ## How to Play
 
