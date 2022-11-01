@@ -13,7 +13,7 @@
 
 <a  display="inline"  href="./assets/how-to.png?raw=true">
 
-<img  src="./assets/mission.png"  width="45%"  alt="Screenshot of how-to"  title="Screenshot of how-to">
+<img  src="./assets/how-to.png"  width="45%"  alt="Screenshot of how-to"  title="Screenshot of how-to">
 
 </a>
 
@@ -21,7 +21,7 @@
 
 <a  display="inline"  href="./assets/list-shortages.png?raw=true">
 
-<img  src="./assets/home.png"  width="45%"  alt="Screenshot of the shortages"  title="Screenshot of the shortages">
+<img  src="./assets/list-shortages.png"  width="45%"  alt="Screenshot of the shortages"  title="Screenshot of the shortages">
 
 </a>
 
@@ -29,7 +29,7 @@
 
 <a  display="inline"  href="./assets/list-solutions.png?raw=true">
 
-<img  src="./assets/ranks.png"  width="45%"  alt="Screenshot of list solutions"  title="Screenshot of list solutions">
+<img  src="./assets/list-solutions.png"  width="45%"  alt="Screenshot of list solutions"  title="Screenshot of list solutions">
 
 </a>
 
@@ -37,7 +37,7 @@
 
 <a  display="inline"  href="./assets/suggest-solution.png?raw=true">
 
-<img  src="./assets/story.png"  width="45%"  alt="Screenshot of suggest solution"  title="Screenshot of suggest solution">
+<img  src="./assets/suggest-solution.png"  width="45%"  alt="Screenshot of suggest solution"  title="Screenshot of suggest solution">
 
 </a>
 
@@ -45,7 +45,7 @@
 
 <a  display="inline"  href="./assets/delegate-vote.png?raw=true">
 
-<img  src="./assets/mission.png"  width="45%"  alt="Screenshot of delegate vote"  title="Screenshot of delegate vote">
+<img  src="./assets/delegate-vote.png"  width="45%"  alt="Screenshot of delegate vote"  title="Screenshot of delegate vote">
 
 </a>
 
