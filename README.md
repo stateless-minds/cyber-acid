@@ -5,7 +5,8 @@
 
 ![Logo](./assets/logo.png)
 
-  
+ Cyber Acid is a political simulator based on the liquid democracy concept. It is designed as an integration module that works with Cyber Stasis - the moneyless economy simulator.
+
 
 ## Screenshots
 
@@ -50,11 +51,7 @@
 </a>
 
   
-  
-
-Cyber Acid is a political simulator based on the liquid democracy concept. It is designed as an integration module that works with Cyber Stasis - the moneyless economy simulator.
-
-  ## Features
+## Features
 
   
 
