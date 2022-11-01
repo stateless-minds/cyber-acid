@@ -130,9 +130,7 @@ Please note the game has been developed on a WQHD resolution(2560x1440) and is c
 
 1. Make reputation index context/category based
 
-2. Add delegate rankings
-
-3. Make voting time-restricted
+2. Make voting time-restricted
 
   
 
