@@ -50,6 +50,13 @@
 
 </a>
 
+
+
+<a  display="inline"  href="./assets/delegate-trust.png?raw=true">
+
+<img  src="./assets/delegate-trust.png"  width="45%"  alt="Screenshot of delegate trust"  title="Screenshot of delegate trust">
+
+</a>
   
 ## Features
 
