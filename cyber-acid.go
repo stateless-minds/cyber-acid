@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"sort"
 	"strconv"
@@ -44,6 +45,7 @@ type acid struct {
 	citizenID              string
 	issues                 []Issue
 	ranks                  []CitizenReputation
+	delegates              []Delegate
 	currentIssueInSlice    int
 	currentSolutionInSlice int
 	Solutions              []Solution
@@ -106,6 +108,7 @@ func (a *acid) OnMount(ctx app.Context) {
 	password := "mysecretpassword"
 
 	a.citizenID = mixer.EncodeString(password, citizenID)
+	a.citizenID = "3"
 	a.subscribe(ctx)
 	a.notifications = make(map[string]notification)
 
@@ -284,6 +287,10 @@ func (a *acid) Render() app.UI {
 										app.I().Class("p-icon--warning is-light p-side-navigation__icon"),
 										app.Span().Class("p-side-navigation__label").Text("Shortages"),
 									).Aria("current", "page"),
+									app.A().Class("p-side-navigation__link").Href("#").Body(
+										app.I().Class("p-icon--share is-light p-side-navigation__icon"),
+										app.Span().Class("p-side-navigation__label").Text("Delegate rankings"),
+									).OnClick(a.openRankingsDialog),
 								),
 							),
 						),
@@ -308,7 +315,7 @@ func (a *acid) Render() app.UI {
 				),
 				app.Div().Class("p-panel__content").Body(
 					app.Div().Class("u-fixed-width").Body(
-						app.Table().Aria("label", "JAAS table example").Class("p-main-table").Body(
+						app.Table().Aria("label", "Issues table").Class("p-main-table").Body(
 							app.THead().Body(
 								app.Tr().Body(
 									app.Th().Body(
@@ -476,6 +483,36 @@ func (a *acid) Render() app.UI {
 										),
 									),
 								),
+							),
+						).Style("left", "10%").Style("width", "80%"),
+					),
+					app.Div().Class("p-modal").ID("rankings-modal").Style("display", "none").Body(
+						app.Section().Class("p-modal__dialog").Role("dialog").Aria("modal", true).Aria("labelledby", "modal-title").Aria("describedby", "modal-description").Body(
+							app.Header().Class("p-modal__header").Body(
+								app.H2().Class("p-modal__title").ID("modal-title").Text("Delegate rankings"),
+								app.Button().Class("p-modal__close").Aria("label", "Close active modal").Aria("controls", "modal").OnClick(a.closeRankingsModal),
+							),
+							app.Table().Aria("label", "Rankings table").Class("p-main-table").Body(
+								app.THead().Body(
+									app.Tr().Body(
+										app.Th().Body(
+											app.Span().Class("status-icon is-blocked").Text("Delegates"),
+										),
+										app.Th().Text("Trust"),
+									),
+								),
+								app.If(len(a.delegates) > 0, app.TBody().Body(
+									app.Range(a.delegates).Slice(func(i int) app.UI {
+										return app.Tr().DataSet("id", i).Body(
+											app.Td().DataSet("column", "delegate").Body(
+												app.Div().Text(a.delegates[i].CitizenID),
+											),
+											app.Td().DataSet("column", "trust").Body(
+												app.Div().Text(a.delegates[i].Selected),
+											),
+										)
+									}),
+								)),
 							),
 						).Style("left", "10%").Style("width", "80%"),
 					),
@@ -689,6 +726,17 @@ func (a *acid) vote(ctx app.Context, e app.Event) {
 	})
 }
 
+func (a *acid) openRankingsDialog(ctx app.Context, e app.Event) {
+	for _, i := range a.issues {
+		a.delegates = append(a.delegates, i.Delegates...)
+	}
+	sort.SliceStable(a.delegates, func(i, j int) bool {
+		return a.delegates[i].Selected > a.delegates[j].Selected
+	})
+	fmt.Println(a.delegates)
+	app.Window().GetElementByID("rankings-modal").Set("style", "display:flex")
+}
+
 func (a *acid) openHowToDialog(ctx app.Context, e app.Event) {
 	app.Window().GetElementByID("howto-modal").Set("style", "display:flex")
 }
@@ -778,6 +826,10 @@ func (a *acid) toggleAccordion(ctx app.Context, e app.Event) {
 	} else {
 		app.Window().GetElementByID(id).Call("setAttribute", "aria-hidden", "false")
 	}
+}
+
+func (a *acid) closeRankingsModal(ctx app.Context, e app.Event) {
+	app.Window().GetElementByID("rankings-modal").Set("style", "display:none")
 }
 
 func (a *acid) closeHowToModal(ctx app.Context, e app.Event) {
