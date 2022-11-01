@@ -5,6 +5,9 @@
 
 ![Logo](./assets/logo.png)
 
+"A lot of people say if you care about global problems just be a politician. But is only the politician allowed to care about such issues?
+Isn't every living human being having that same right which is taken by the politicians with no other options presented? That's what representative democracy is all about. Full unconditional representation until the next election vote. Immense transfer of power with no guarantees whatsoever."
+
  Cyber Acid is a political simulator based on the liquid democracy concept. It is designed as an integration module that works with Cyber Stasis - the moneyless economy simulator.
 
 
