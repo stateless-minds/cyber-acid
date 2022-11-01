@@ -39,20 +39,21 @@ const (
 // embedding app.Compo into a struct.
 type acid struct {
 	app.Compo
-	topic                  string
-	sh                     *shell.Shell
-	sub                    *shell.PubSubSubscription
-	citizenID              string
-	issues                 []Issue
-	ranks                  []CitizenReputation
-	delegates              []Delegate
-	currentIssueInSlice    int
-	currentSolutionInSlice int
-	Solutions              []Solution
-	currentSolutionDesc    string
-	notifications          map[string]notification
-	notificationID         int
-	AsideTitle             string
+	topic                      string
+	sh                         *shell.Shell
+	sub                        *shell.PubSubSubscription
+	citizenID                  string
+	issues                     []Issue
+	categoryIssues             map[string][]Issue
+	ranks                      []CitizenReputation
+	delegates                  []Delegate
+	currentIssueInSlice        int
+	currentSolutionInSlice     int
+	Solutions                  []Solution
+	currentSolutionDescription string
+	notifications              map[string]notification
+	notificationID             int
+	AsideTitle                 string
 }
 
 type NotificationStatus string
@@ -65,18 +66,19 @@ type notification struct {
 }
 
 type Issue struct {
-	ID        string     `mapstructure:"_id" json:"_id" validate:"uuid_rfc4122"`
-	Type      string     `mapstructure:"type" json:"type" validate:"uuid_rfc4122"`
-	Desc      string     `mapstructure:"desc" json:"desc" validate:"uuid_rfc4122"`
-	Delegates []Delegate `mapstructure:"delegates" json:"delegates" validate:"uuid_rfc4122"`
-	Solutions []Solution `mapstructure:"solutions" json:"solutions" validate:"uuid_rfc4122"`
-	Voters    []string   `mapstructure:"voters" json:"voters" validate:"uuid_rfc4122"`
+	ID          string     `mapstructure:"_id" json:"_id" validate:"uuid_rfc4122"`
+	Type        string     `mapstructure:"type" json:"type" validate:"uuid_rfc4122"`
+	Category    string     `mapstructure:"category" json:"category" validate:"uuid_rfc4122"`
+	Description string     `mapstructure:"description" json:"description" validate:"uuid_rfc4122"`
+	Delegates   []Delegate `mapstructure:"delegates" json:"delegates" validate:"uuid_rfc4122"`
+	Solutions   []Solution `mapstructure:"solutions" json:"solutions" validate:"uuid_rfc4122"`
+	Voters      []string   `mapstructure:"voters" json:"voters" validate:"uuid_rfc4122"`
 }
 
 type Solution struct {
-	ID    string `mapstructure:"_id" json:"_id" validate:"uuid_rfc4122"`
-	Desc  string `mapstructure:"desc" json:"desc" validate:"uuid_rfc4122"`
-	Votes int    `mapstructure:"votes" json:"votes" validate:"uuid_rfc4122"`
+	ID          string `mapstructure:"_id" json:"_id" validate:"uuid_rfc4122"`
+	Description string `mapstructure:"description" json:"description" validate:"uuid_rfc4122"`
+	Votes       int    `mapstructure:"votes" json:"votes" validate:"uuid_rfc4122"`
 }
 
 type Delegate struct {
@@ -111,7 +113,7 @@ func (a *acid) OnMount(ctx app.Context) {
 	a.citizenID = "3"
 	a.subscribe(ctx)
 	a.notifications = make(map[string]notification)
-
+	a.categoryIssues = make(map[string][]Issue)
 	ctx.Async(func() {
 		// err := a.sh.OrbitDocsDelete(dbAddressIssue, "all")
 		// if err != nil {
@@ -166,9 +168,10 @@ func (a *acid) OnMount(ctx app.Context) {
 				log.Fatal(err)
 			}
 			ctx.Dispatch(func(ctx app.Context) {
+				a.categoryIssues[i.Category] = append(a.categoryIssues[i.Category], i)
 				a.issues = append(a.issues, i)
 				sort.SliceStable(a.issues, func(i, j int) bool {
-					return a.issues[i].ID > a.issues[j].ID
+					return a.issues[i].ID < a.issues[j].ID
 				})
 			})
 		}
@@ -200,56 +203,65 @@ func (a *acid) subscription(ctx app.Context) {
 		ctx.Async(func() {
 			a.subscribe(ctx)
 		})
-		ctx.Dispatch(func(ctx app.Context) {
-			s := Issue{}
-			s.Desc = str
-			var lastID int
-			unique := true
-			for n, i := range a.issues {
-				if s.Desc == i.Desc {
-					unique = false
-				}
 
-				if n > 0 {
-					currentID, err := strconv.Atoi(i.ID)
-					if err != nil {
-						log.Fatal(err)
-					}
-					previousID, err := strconv.Atoi(a.issues[n-1].ID)
-					if err != nil {
-						log.Fatal(err)
-					}
-					if currentID > previousID {
-						lastID = currentID
-					}
-				}
+		s := Issue{}
+		err = json.Unmarshal([]byte(str), &s)
+		if err != nil {
+			log.Fatal(err)
+		}
 
+		var lastID int
+		unique := true
+		for n, i := range a.issues {
+			a.categoryIssues[i.Category] = append(a.categoryIssues[i.Category], i)
+			if s.Description == i.Description {
+				unique = false
 			}
-			if unique {
-				newID := lastID + 1
-				issue := Issue{
-					ID:        strconv.Itoa(newID),
-					Type:      typeShortage,
-					Desc:      s.Desc,
-					Solutions: []Solution{},
-				}
 
-				i, err := json.Marshal(issue)
+			if n == 0 {
+				lastID, err = strconv.Atoi(i.ID)
 				if err != nil {
 					log.Fatal(err)
 				}
-				ctx.Async(func() {
-					err = a.sh.OrbitDocsPut(dbAddressIssue, i)
-					if err != nil {
-						log.Fatal(err)
-					}
-					ctx.Dispatch(func(ctx app.Context) {
-						a.issues = append(a.issues, issue)
-					})
-				})
+			} else {
+				currentID, err := strconv.Atoi(i.ID)
+				if err != nil {
+					log.Fatal(err)
+				}
+				previousID, err := strconv.Atoi(a.issues[n-1].ID)
+				if err != nil {
+					log.Fatal(err)
+				}
+				if currentID > previousID {
+					lastID = currentID
+				}
 			}
 
-		})
+		}
+		if unique {
+			newID := lastID + 1
+			issue := Issue{
+				ID:          strconv.Itoa(newID),
+				Type:        typeShortage,
+				Category:    s.Category,
+				Description: s.Description,
+				Solutions:   []Solution{},
+			}
+
+			i, err := json.Marshal(issue)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			err = a.sh.OrbitDocsPut(dbAddressIssue, i)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			ctx.Dispatch(func(ctx app.Context) {
+				a.issues = append(a.issues, issue)
+			})
+		}
 	})
 }
 
@@ -315,31 +327,60 @@ func (a *acid) Render() app.UI {
 				),
 				app.Div().Class("p-panel__content").Body(
 					app.Div().Class("u-fixed-width").Body(
-						app.Table().Aria("label", "Issues table").Class("p-main-table").Body(
-							app.THead().Body(
-								app.Tr().Body(
-									app.Th().Body(
-										app.Span().Class("status-icon is-blocked").Text("Issues"),
-									),
-									app.Th().Text("Actions"),
-								),
-							),
-							app.If(len(a.issues) > 0, app.TBody().Body(
-								app.Range(a.issues).Slice(func(i int) app.UI {
-									return app.Tr().DataSet("id", i).Body(
-										app.Td().DataSet("column", "issue").Body(
-											app.Div().Text(a.issues[i].Desc),
-										),
-										app.Td().DataSet("column", "action").Body(
-											app.Div().Body(
-												app.Button().Class("u-no-margin--bottom").Text("List Solutions").Value(a.issues[i].ID).OnMouseOver(a.asidePreloadList).OnClick(a.asideOpenList),
-												app.Button().Class("u-no-margin--bottom").Text("Suggest Solution").Value(a.issues[i].ID).OnMouseOver(a.asidePreloadCreate).OnClick(a.asideOpenCreate),
+						app.If(len(a.categoryIssues) > 0,
+							app.Range(a.categoryIssues).Map(func(s string) app.UI {
+								return app.Table().Aria("label", "Issues table").Class("p-main-table").Body(
+									app.THead().Body(
+										app.Tr().Body(
+											app.Th().Body(
+												app.Span().Class("status-icon is-running").Text("Category "+s),
 											),
+											app.Th().Text("Actions"),
 										),
-									)
-								}),
-							)),
+									),
+									app.If(len(a.categoryIssues[s]) > 0, app.TBody().Body(
+										app.Range(a.categoryIssues[s]).Slice(func(i int) app.UI {
+											return app.Tr().DataSet("id", i).Body(
+												app.Td().DataSet("column", "issue").Body(
+													app.Div().Text(a.categoryIssues[s][i].Description),
+												),
+												app.Td().DataSet("column", "action").Body(
+													app.Div().Body(
+														app.Button().Class("u-no-margin--bottom").Text("List Solutions").Value(a.categoryIssues[s][i].ID).OnMouseOver(a.asidePreloadList).OnClick(a.asideOpenList),
+														app.Button().Class("u-no-margin--bottom").Text("Suggest Solution").Value(a.categoryIssues[s][i].ID).OnMouseOver(a.asidePreloadCreate).OnClick(a.asideOpenCreate),
+													),
+												),
+											)
+										}),
+									)),
+								)
+							}),
 						),
+						// app.Table().Aria("label", "Issues table").Class("p-main-table").Body(
+						// 	app.THead().Body(
+						// 		app.Tr().Body(
+						// 			app.Th().Body(
+						// 				app.Span().Class("status-icon is-blocked").Text("Issues"),
+						// 			),
+						// 			app.Th().Text("Actions"),
+						// 		),
+						// 	),
+						// 	app.If(len(a.issues) > 0, app.TBody().Body(
+						// 		app.Range(a.issues).Slice(func(i int) app.UI {
+						// 			return app.Tr().DataSet("id", i).Body(
+						// 				app.Td().DataSet("column", "issue").Body(
+						// 					app.Div().Text(a.issues[i].Description),
+						// 				),
+						// 				app.Td().DataSet("column", "action").Body(
+						// 					app.Div().Body(
+						// 						app.Button().Class("u-no-margin--bottom").Text("List Solutions").Value(a.issues[i].ID).OnMouseOver(a.asidePreloadList).OnClick(a.asideOpenList),
+						// 						app.Button().Class("u-no-margin--bottom").Text("Suggest Solution").Value(a.issues[i].ID).OnMouseOver(a.asidePreloadCreate).OnClick(a.asideOpenCreate),
+						// 					),
+						// 				),
+						// 			)
+						// 		}),
+						// 	)),
+						// ),
 					),
 					app.Div().Class("p-modal").ID("howto-modal").Style("display", "none").Body(
 						app.Section().Class("p-modal__dialog").Role("dialog").Aria("modal", true).Aria("labelledby", "modal-title").Aria("describedby", "modal-description").Body(
@@ -548,7 +589,7 @@ func (a *acid) Render() app.UI {
 								app.Ul().Class("p-list-tree").Role("group").ID("sub-1").Aria("hidden", false).Aria("labelledby", "sub-1-btn").Body(
 									app.Range(a.Solutions).Slice(func(i int) app.UI {
 										return app.Li().Class("p-list-tree__item").Role("treeitem").Body(
-											app.P().Text(a.Solutions[i].Desc),
+											app.P().Text(a.Solutions[i].Description),
 											app.If(len(a.issues[a.currentIssueInSlice].Voters) > 0,
 												app.If(sliceContains(a.issues[a.currentIssueInSlice].Voters, a.citizenID),
 													app.Button().Class("p-button is-small is-inline").Text("Vote").Value(a.Solutions[i].ID).OnClick(a.vote).Disabled(true).Body(
@@ -664,7 +705,7 @@ func (a *acid) asideClose(ctx app.Context, e app.Event) {
 }
 
 func (a *acid) onSolution(ctx app.Context, e app.Event) {
-	a.currentSolutionDesc = ctx.JSSrc().Get("value").String()
+	a.currentSolutionDescription = ctx.JSSrc().Get("value").String()
 }
 
 func (a *acid) vote(ctx app.Context, e app.Event) {
@@ -852,7 +893,7 @@ func (a *acid) submitSolution(ctx app.Context, e app.Event) {
 	if len(a.issues[id-1].Solutions) > 0 {
 		solutions := a.issues[id-1].Solutions
 		for n, s := range solutions {
-			if s.Desc == a.currentSolutionDesc {
+			if s.Description == a.currentSolutionDescription {
 				unique = false
 			}
 			if n > 0 {
@@ -875,9 +916,9 @@ func (a *acid) submitSolution(ctx app.Context, e app.Event) {
 
 	if unique {
 		solution := Solution{
-			ID:    strconv.Itoa(lastSolutionID + 1),
-			Desc:  a.currentSolutionDesc,
-			Votes: 0,
+			ID:          strconv.Itoa(lastSolutionID + 1),
+			Description: a.currentSolutionDescription,
+			Votes:       0,
 		}
 
 		a.issues[id-1].Solutions = append(a.issues[id-1].Solutions, solution)
