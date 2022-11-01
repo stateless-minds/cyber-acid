@@ -496,7 +496,7 @@ func (a *acid) Render() app.UI {
 								app.THead().Body(
 									app.Tr().Body(
 										app.Th().Body(
-											app.Span().Class("status-icon is-blocked").Text("Delegates"),
+											app.Span().Class("status-icon is-blocked").Text("Delegate ID"),
 										),
 										app.Th().Text("Trust"),
 									),
