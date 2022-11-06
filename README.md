@@ -104,7 +104,7 @@ The game runs on the public IPFS network. In order to play it follow the steps b
 
 "HTTPHeaders": {
 
-"Access-Control-Allow-Origin": ["webui://-", "http://localhost:3000", "http://bafybeicyapwnbwjokbeu2pw6tzgerl5hwkv6qjbeopstfhmnkzjvhb5lj4.ipfs.localhost:8080", "http://127.0.0.1:5001", "https://webui.ipfs.io"],
+"Access-Control-Allow-Origin": ["webui://-", "http://localhost:3000", "http://bafybeicm22vjv5rqalbekqbhxom47rnotvgwnxmqnhimnklqqky73ys55i.ipfs.localhost:8080", "http://127.0.0.1:5001", "https://webui.ipfs.io"],
 
 "Access-Control-Allow-Credentials": ["true"],
 
