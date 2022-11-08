@@ -356,31 +356,6 @@ func (a *acid) Render() app.UI {
 								)
 							}),
 						),
-						// app.Table().Aria("label", "Issues table").Class("p-main-table").Body(
-						// 	app.THead().Body(
-						// 		app.Tr().Body(
-						// 			app.Th().Body(
-						// 				app.Span().Class("status-icon is-blocked").Text("Issues"),
-						// 			),
-						// 			app.Th().Text("Actions"),
-						// 		),
-						// 	),
-						// 	app.If(len(a.issues) > 0, app.TBody().Body(
-						// 		app.Range(a.issues).Slice(func(i int) app.UI {
-						// 			return app.Tr().DataSet("id", i).Body(
-						// 				app.Td().DataSet("column", "issue").Body(
-						// 					app.Div().Text(a.issues[i].Description),
-						// 				),
-						// 				app.Td().DataSet("column", "action").Body(
-						// 					app.Div().Body(
-						// 						app.Button().Class("u-no-margin--bottom").Text("List Solutions").Value(a.issues[i].ID).OnMouseOver(a.asidePreloadList).OnClick(a.asideOpenList),
-						// 						app.Button().Class("u-no-margin--bottom").Text("Suggest Solution").Value(a.issues[i].ID).OnMouseOver(a.asidePreloadCreate).OnClick(a.asideOpenCreate),
-						// 					),
-						// 				),
-						// 			)
-						// 		}),
-						// 	)),
-						// ),
 					),
 					app.Div().Class("p-modal").ID("howto-modal").Style("display", "none").Body(
 						app.Section().Class("p-modal__dialog").Role("dialog").Aria("modal", true).Aria("labelledby", "modal-title").Aria("describedby", "modal-description").Body(
