@@ -21,6 +21,11 @@ const dbAddressCitizenReputation = "/orbitdb/bafyreide5xex6dwtdg45eserwx2ib2cjeq
 const typeShortage = "shortage"
 
 const (
+	topicCritical = "critical"
+	topicIssue    = "issue"
+)
+
+const (
 	NotificationSuccess NotificationStatus = "positive"
 	NotificationInfo    NotificationStatus = "info"
 	NotificationWarning NotificationStatus = "warning"
@@ -39,7 +44,6 @@ const (
 // embedding app.Compo into a struct.
 type acid struct {
 	app.Compo
-	topic                      string
 	sh                         *shell.Shell
 	sub                        *shell.PubSubSubscription
 	citizenID                  string
@@ -96,8 +100,6 @@ type CitizenReputation struct {
 }
 
 func (a *acid) OnMount(ctx app.Context) {
-	topic := "critical"
-	a.topic = topic
 	sh := shell.NewShell("localhost:5001")
 	a.sh = sh
 	myPeer, err := a.sh.ID()
@@ -110,8 +112,8 @@ func (a *acid) OnMount(ctx app.Context) {
 	password := "mysecretpassword"
 
 	a.citizenID = mixer.EncodeString(password, citizenID)
-	a.citizenID = "3"
-	a.subscribe(ctx)
+	a.subscribeToCriticalTopic(ctx)
+	a.subscribeToIssueTopic(ctx)
 	a.notifications = make(map[string]notification)
 	a.categoryIssues = make(map[string][]Issue)
 	ctx.Async(func() {
@@ -178,18 +180,31 @@ func (a *acid) OnMount(ctx app.Context) {
 	})
 }
 
-func (a *acid) subscribe(ctx app.Context) {
+func (a *acid) subscribeToCriticalTopic(ctx app.Context) {
 	ctx.Async(func() {
-		subscription, err := a.sh.PubSubSubscribe(a.topic)
+		topic := topicCritical
+		subscription, err := a.sh.PubSubSubscribe(topic)
 		if err != nil {
 			log.Fatal(err)
 		}
 		a.sub = subscription
-		a.subscription(ctx)
+		a.subscriptionCritical(ctx)
 	})
 }
 
-func (a *acid) subscription(ctx app.Context) {
+func (a *acid) subscribeToIssueTopic(ctx app.Context) {
+	ctx.Async(func() {
+		topic := topicIssue
+		subscription, err := a.sh.PubSubSubscribe(topic)
+		if err != nil {
+			log.Fatal(err)
+		}
+		a.sub = subscription
+		a.subscriptionIssue(ctx)
+	})
+}
+
+func (a *acid) subscriptionIssue(ctx app.Context) {
 	ctx.Async(func() {
 		defer a.sub.Cancel()
 		// wait on pubsub
@@ -199,9 +214,41 @@ func (a *acid) subscription(ctx app.Context) {
 		}
 		// Decode the string data.
 		str := string(res.Data)
-		log.Println("Subscriber of topic: " + a.topic + " received message: " + str)
+		log.Println("Subscriber of topic issue received message: " + str)
 		ctx.Async(func() {
-			a.subscribe(ctx)
+			a.subscribeToIssueTopic(ctx)
+		})
+
+		s := Issue{}
+		err = json.Unmarshal([]byte(str), &s)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		id, err := strconv.Atoi(s.ID)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		ctx.Dispatch(func(ctx app.Context) {
+			a.issues[id-1] = s
+		})
+	})
+}
+
+func (a *acid) subscriptionCritical(ctx app.Context) {
+	ctx.Async(func() {
+		defer a.sub.Cancel()
+		// wait on pubsub
+		res, err := a.sub.Next()
+		if err != nil {
+			log.Fatal(err)
+		}
+		// Decode the string data.
+		str := string(res.Data)
+		log.Println("Subscriber of topic critical received message: " + str)
+		ctx.Async(func() {
+			a.subscribeToCriticalTopic(ctx)
 		})
 
 		s := Issue{}
@@ -254,6 +301,11 @@ func (a *acid) subscription(ctx app.Context) {
 			}
 
 			err = a.sh.OrbitDocsPut(dbAddressIssue, i)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			err = a.sh.PubSubPublish(topicIssue, string(i))
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -735,6 +787,10 @@ func (a *acid) vote(ctx app.Context, e app.Event) {
 				log.Fatal(err)
 			})
 		}
+		err = a.sh.PubSubPublish(topicIssue, string(i))
+		if err != nil {
+			log.Fatal(err)
+		}
 		ctx.Dispatch(func(ctx app.Context) {
 			a.issues[a.currentIssueInSlice] = currentIssue
 			a.createNotification(ctx, NotificationSuccess, SuccessHeader, "Vote accepted.")
@@ -825,6 +881,11 @@ func (a *acid) delegate(ctx app.Context, e app.Event) {
 			log.Fatal(err)
 		}
 
+		err = a.sh.PubSubPublish(topicIssue, string(i))
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		ctx.Dispatch(func(ctx app.Context) {
 			a.issues[a.currentIssueInSlice] = issue
 			a.closeDelegateModal(ctx, e)
@@ -911,6 +972,11 @@ func (a *acid) submitSolution(ctx app.Context, e app.Event) {
 					log.Fatal(err)
 				})
 			}
+			err = a.sh.PubSubPublish(topicIssue, string(i))
+			if err != nil {
+				log.Fatal(err)
+			}
+
 			ctx.Dispatch(func(ctx app.Context) {
 				app.Window().Get("document").Call("querySelector", ".l-aside").Get("classList").Call("add", "is-collapsed")
 				a.createNotification(ctx, NotificationSuccess, SuccessHeader, "Solution submited.")
