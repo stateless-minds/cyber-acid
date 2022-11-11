@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"sort"
 	"strconv"
@@ -52,7 +51,6 @@ type acid struct {
 	ranks                      []CitizenReputation
 	delegates                  []Delegate
 	currentIssueInSlice        int
-	currentSolutionInSlice     int
 	Solutions                  []Solution
 	currentSolutionDescription string
 	notifications              map[string]notification
@@ -805,7 +803,6 @@ func (a *acid) openRankingsDialog(ctx app.Context, e app.Event) {
 	sort.SliceStable(a.delegates, func(i, j int) bool {
 		return a.delegates[i].Selected > a.delegates[j].Selected
 	})
-	fmt.Println(a.delegates)
 	app.Window().GetElementByID("rankings-modal").Set("style", "display:flex")
 }
 
@@ -815,12 +812,6 @@ func (a *acid) openHowToDialog(ctx app.Context, e app.Event) {
 
 func (a *acid) openDelegateDialog(ctx app.Context, e app.Event) {
 	app.Window().GetElementByID("delegate-modal").Set("style", "display:flex")
-	solutionID := ctx.JSSrc().Get("value").String()
-	solutionIDInt, err := strconv.Atoi(solutionID)
-	if err != nil {
-		log.Fatal(err)
-	}
-	a.currentSolutionInSlice = solutionIDInt - 1
 }
 
 func (a *acid) delegate(ctx app.Context, e app.Event) {
