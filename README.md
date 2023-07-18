@@ -104,7 +104,7 @@ The game runs on the public IPFS network. In order to play it follow the steps b
 
 "HTTPHeaders": {
 
-"Access-Control-Allow-Origin": ["webui://-", "http://localhost:3000", "http://bafybeicyapwnbwjokbeu2pw6tzgerl5hwkv6qjbeopstfhmnkzjvhb5lj4.ipfs.localhost:8080", "http://127.0.0.1:5001", "https://webui.ipfs.io"],
+"Access-Control-Allow-Origin": ["webui://-", "http://localhost:3000", "http://k51qzi5uqu5dgxg5be41yci6sli2yj9bm69j361nh6vpkwm3xrbhpbchf853i4.ipns.localhost:8080", "http://127.0.0.1:5001", "https://webui.ipfs.io"],
 
 "Access-Control-Allow-Credentials": ["true"],
 
@@ -116,7 +116,7 @@ The game runs on the public IPFS network. In order to play it follow the steps b
 
 ```
 
-6. Navigate to <a  href="https://ipfs.io/ipfs/QmTWbYfASqfEkLC6LkdemEVczoffoH8xfFgWkYLzxMU5bF">https://ipfs.io/ipfs/QmTWbYfASqfEkLC6LkdemEVczoffoH8xfFgWkYLzxMU5bF</a> and let's simulate the future together!
+6. Navigate to <a  href="https://ipfs.io/ipns/k51qzi5uqu5dgxg5be41yci6sli2yj9bm69j361nh6vpkwm3xrbhpbchf853i4">Cyber Acid</a> and let's simulate the future together!
 
 7. If you like the game consider pinning it to your local node so that you become a permanent host of it while you have IPFS daemon running
 
