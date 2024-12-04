@@ -10,7 +10,7 @@ import (
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/foolin/mixer"
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 	"github.com/mitchellh/mapstructure"
 	shell "github.com/stateless-minds/go-ipfs-api"
 )
@@ -364,23 +364,23 @@ func (a *acid) Render() app.UI {
 		),
 		app.Main().Class("l-main").Body(
 			app.Div().Class("p-panel").Body(
-				app.If(len(a.notifications) > 0,
-					app.Range(a.notifications).Map(func(s string) app.UI {
+				app.If(len(a.notifications) > 0, func() app.UI {
+					return app.Range(a.notifications).Map(func(s string) app.UI {
 						return app.Div().Class("p-notification--" + a.notifications[s].status).Body(
 							app.Div().Class("p-notification__content").Body(
 								app.H5().Class("p-notification__title").Text(a.notifications[s].header),
 								app.P().Class("p-notification__message").Text(a.notifications[s].message),
 							),
 						)
-					}),
-				),
+					})
+				}),
 				app.Div().Class("p-panel__header").Body(
 					app.H4().Class("p-panel__title").Text("Open Issues"),
 				),
 				app.Div().Class("p-panel__content").Body(
 					app.Div().Class("u-fixed-width").Body(
-						app.If(len(a.categoryIssues) > 0,
-							app.Range(a.categoryIssues).Map(func(s string) app.UI {
+						app.If(len(a.categoryIssues) > 0, func() app.UI {
+							return app.Range(a.categoryIssues).Map(func(s string) app.UI {
 								return app.Table().Aria("label", "Issues table").Class("p-main-table").Body(
 									app.THead().Body(
 										app.Tr().Body(
@@ -390,24 +390,26 @@ func (a *acid) Render() app.UI {
 											app.Th().Text("Actions"),
 										),
 									),
-									app.If(len(a.categoryIssues[s]) > 0, app.TBody().Body(
-										app.Range(a.categoryIssues[s]).Slice(func(i int) app.UI {
-											return app.Tr().DataSet("id", i).Body(
-												app.Td().DataSet("column", "issue").Body(
-													app.Div().Text(a.categoryIssues[s][i].Description),
-												),
-												app.Td().DataSet("column", "action").Body(
-													app.Div().Body(
-														app.Button().Class("u-no-margin--bottom").Text("List Solutions").Value(a.categoryIssues[s][i].ID).OnMouseOver(a.asidePreloadList).OnClick(a.asideOpenList),
-														app.Button().Class("u-no-margin--bottom").Text("Suggest Solution").Value(a.categoryIssues[s][i].ID).OnMouseOver(a.asidePreloadCreate).OnClick(a.asideOpenCreate),
+									app.If(len(a.categoryIssues[s]) > 0, func() app.UI {
+										return app.TBody().Body(
+											app.Range(a.categoryIssues[s]).Slice(func(i int) app.UI {
+												return app.Tr().DataSet("id", i).Body(
+													app.Td().DataSet("column", "issue").Body(
+														app.Div().Text(a.categoryIssues[s][i].Description),
 													),
-												),
-											)
-										}),
-									)),
+													app.Td().DataSet("column", "action").Body(
+														app.Div().Body(
+															app.Button().Class("u-no-margin--bottom").Text("List Solutions").Value(a.categoryIssues[s][i].ID).OnMouseOver(a.asidePreloadList).OnClick(a.asideOpenList),
+															app.Button().Class("u-no-margin--bottom").Text("Suggest Solution").Value(a.categoryIssues[s][i].ID).OnMouseOver(a.asidePreloadCreate).OnClick(a.asideOpenCreate),
+														),
+													),
+												)
+											}),
+										)
+									}),
 								)
-							}),
-						),
+							})
+						}),
 					),
 					app.Div().Class("p-modal").ID("howto-modal").Style("display", "none").Body(
 						app.Section().Class("p-modal__dialog").Role("dialog").Aria("modal", true).Aria("labelledby", "modal-title").Aria("describedby", "modal-description").Body(
@@ -569,7 +571,8 @@ func (a *acid) Render() app.UI {
 										app.Th().Text("Trust"),
 									),
 								),
-								app.If(len(a.delegates) > 0, app.TBody().Body(
+								app.If(len(a.delegates) > 0, func() app.UI {
+									return app.TBody().Body(
 									app.Range(a.delegates).Slice(func(i int) app.UI {
 										return app.Tr().DataSet("id", i).Body(
 											app.Td().DataSet("column", "delegate").Body(
@@ -580,7 +583,8 @@ func (a *acid) Render() app.UI {
 											),
 										)
 									}),
-								)),
+									)
+								}),
 							),
 						).Style("left", "10%").Style("width", "80%"),
 					),
@@ -595,8 +599,8 @@ func (a *acid) Render() app.UI {
 						app.Button().Class("p-button--base u-no-margin--bottom has-icon").Body(app.I().Class("p-icon--close")).OnClick(a.asideClose),
 					),
 				),
-				app.If(a.AsideTitle == asideTitleCreate,
-					app.Div().Class("p-panel__content").Body(
+				app.If(a.AsideTitle == asideTitleCreate, func() app.UI {
+					return app.Div().Class("p-panel__content").Body(
 						app.Div().Class("p-form p-form--stacked").Body(
 							app.Div().Class("p-form__group row").Body(
 								app.Textarea().ID("solution").Name("solution").Rows(3).OnKeyUp(a.onSolution),
@@ -607,9 +611,9 @@ func (a *acid) Render() app.UI {
 								app.Button().Class("p-button--positive u-float-right").Name("submit-solution").Text("Submit Solution").OnClick(a.submitSolution),
 							),
 						),
-					),
-				).ElseIf(a.AsideTitle == asideTitleList,
-					app.Div().Class("p-panel__content").Body(
+					)
+				}).ElseIf(a.AsideTitle == asideTitleList, func() app.UI {
+					return app.Div().Class("p-panel__content").Body(
 						app.Ul().Class("p-list-tree").Aria("multiselectable", true).Role("tree").Body(
 							app.Li().Class("p-list-tree__item p-list-tree__item--group").Role("treeitem").Body(
 								app.Button().Class("p-list-tree__toggle").ID("sub-1-btn").Aria("controls", "sub-1").Aria("expanded", true).Text("Suggested Solutions"),
@@ -617,87 +621,200 @@ func (a *acid) Render() app.UI {
 									app.Range(a.Solutions).Slice(func(i int) app.UI {
 										return app.Li().Class("p-list-tree__item").Role("treeitem").Body(
 											app.P().Text(a.Solutions[i].Description),
-											app.If(len(a.issues[a.currentIssueInSlice].Voters) > 0,
-												app.If(sliceContains(a.issues[a.currentIssueInSlice].Voters, a.citizenID),
-													app.Button().Class("p-button is-small is-inline").Text("Vote").Value(a.Solutions[i].ID).OnClick(a.vote).Disabled(true).Body(
-														app.I().Class("fa-solid fa-thumbs-up"),
-													),
-													app.Span().Class("p-badge").Aria("label", strconv.Itoa(a.Solutions[i].Votes)+"votes").Text(a.Solutions[i].Votes),
-												).Else(
-													app.Button().Class("p-button is-small is-inline").Text("Vote").Value(a.Solutions[i].ID).OnClick(a.vote).Body(
-														app.I().Class("fa-regular fa-thumbs-up"),
-													),
-													app.Button().Class("p-button is-small is-inline").ID("show-modal").Text("Delegate...").Aria("controls", "modal").Value(a.Solutions[i].ID).OnClick(a.openDelegateDialog),
-													app.Div().Class("p-modal").ID("delegate-modal").Style("display", "none").Body(
-														app.Section().Class("p-modal__dialog").Role("dialog").Aria("modal", true).Aria("labelledby", "modal-title").Aria("describedby", "modal-description").Body(
-															app.Header().Class("p-modal__header").Body(
-																app.H2().Class("p-modal__title").ID("modal-title").Text("Delegate"),
-																app.Button().Class("p-modal__close").Aria("label", "Close active modal").Aria("controls", "modal").Value(a.Solutions[i].ID).OnClick(a.closeDelegateModal),
+											app.If(len(a.issues[a.currentIssueInSlice].Voters) > 0, func() app.UI {
+												return app.If(sliceContains(a.issues[a.currentIssueInSlice].Voters, a.citizenID), func() app.UI {
+													return app.Button().
+													Class("p-button is-small is-inline").
+													Text("Vote").
+													Value(a.Solutions[i].ID).
+													OnClick(a.vote).
+													Disabled(true).
+													Body(
+														app.I().Class("fa-solid fa-thumbs-up"), // Icon
+														app.Span().
+															Class("p-badge").
+															Aria("label", strconv.Itoa(a.Solutions[i].Votes)+" votes").
+															Text(strconv.Itoa(a.Solutions[i].Votes)), // Votes count
+													)												
+												}).Else( func() app.UI {
+													return app.Div().Class("vote-delegate-container").Body(
+														// Vote Button with Icon
+														app.Button().
+															Class("p-button is-small is-inline").
+															Text("Vote").
+															Value(a.Solutions[i].ID).
+															OnClick(a.vote).
+															Body(
+																app.I().Class("fa-regular fa-thumbs-up"), // Icon for Vote
 															),
-															app.P().ID("modal-description").Text("Select a citizen to represent your vote for this issue:"),
-															app.Div().Class("p-heading-icon--small").Body(
-																app.Range(a.ranks).Slice(func(i int) app.UI {
-																	return app.If(a.ranks[i].CitizenID != a.citizenID,
-																		app.Div().Class("p-heading-icon__header").Body(
-																			app.Button().Class("p-chip").Aria("pressed", true).Disabled(true).Body(
-																				app.Span().Class("p-chip__value").Text("Citizen"),
-																				app.Span().Class("p-badge").Aria("label", "Citizen").Text(a.ranks[i].CitizenID),
+													
+														// Delegate Button
+														app.Button().
+															Class("p-button is-small is-inline").
+															ID("show-modal").
+															Text("Delegate...").
+															Aria("controls", "modal").
+															Value(a.Solutions[i].ID).
+															OnClick(a.openDelegateDialog),
+													
+														// Modal for Delegation
+														app.Div().
+															Class("p-modal").
+															ID("delegate-modal").
+															Style("display", "none"). // Initially hidden
+															Body(
+																app.Section().
+																	Class("p-modal__dialog").
+																	Role("dialog").
+																	Aria("modal", true).
+																	Aria("labelledby", "modal-title").
+																	Aria("describedby", "modal-description").
+																	Body(
+																		app.Header().
+																			Class("p-modal__header").
+																			Body(
+																				app.H2().
+																					Class("p-modal__title").
+																					ID("modal-title").
+																					Text("Delegate"),
+																				app.Button().
+																					Class("p-modal__close").
+																					Aria("label", "Close active modal").
+																					Aria("controls", "modal").
+																					Value(a.Solutions[i].ID).
+																					OnClick(a.closeDelegateModal),
 																			),
-																			app.Button().Class("p-chip").Aria("pressed", true).Disabled(true).Body(
-																				app.Span().Class("p-chip__value").Text("Reputation"),
-																				app.Span().Class("p-badge").Aria("label", "Reputation").Text(a.ranks[i].ReputationIndex),
+																		app.P().
+																			ID("modal-description").
+																			Text("Select a citizen to represent your vote for this issue:"),
+																		app.Div().
+																			Class("p-heading-icon--small").
+																			Body(
+																				app.Range(a.ranks).Slice(func(i int) app.UI {
+																					return app.If(a.ranks[i].CitizenID != a.citizenID, func() app.UI {
+																						return app.Div().Class("p-heading-icon__header").Body(
+																							app.Button().
+																								Class("p-chip").
+																								Aria("pressed", true).
+																								Disabled(true).
+																								Body(
+																									app.Span().Class("p-chip__value").Text("Citizen"),
+																									app.Span().Class("p-badge").Aria("label", "Citizen").Text(a.ranks[i].CitizenID),
+																								),
+																							app.Button().
+																								Class("p-chip").
+																								Aria("pressed", true).
+																								Disabled(true).
+																								Body(
+																									app.Span().Class("p-chip__value").Text("Reputation"),
+																									app.Span().Class("p-badge").Aria("label", "Reputation").Text(a.ranks[i].ReputationIndex),
+																								),
+																							app.Button().
+																								Class("p-chip").
+																								Body(
+																									app.Span().Class("p-chip__value").Text("Select"),
+																								).Value(a.ranks[i].CitizenID).OnClick(a.delegate),
+																						)
+																					})
+																				}),
 																			),
-																			app.Button().Class("p-chip").Body(
-																				app.Span().Class("p-chip__value").Text("Select"),
-																			).Value(a.ranks[i].CitizenID).OnClick(a.delegate),
-																		),
-																	)
-																}),
-															),
-														),
-													),
-												),
-											).Else(
-												app.Button().Class("p-button is-small is-inline").Text("Vote").Value(a.Solutions[i].ID).OnClick(a.vote).Body(
-													app.I().Class("fa-regular fa-thumbs-up"),
-												),
-												app.Button().Class("p-button is-small is-inline").ID("show-modal").Text("Delegate...").Aria("controls", "modal").Value(a.Solutions[i].ID).OnClick(a.openDelegateDialog),
-												app.Div().Class("p-modal").ID("delegate-modal").Style("display", "none").Body(
-													app.Section().Class("p-modal__dialog").Role("dialog").Aria("modal", true).Aria("labelledby", "modal-title").Aria("describedby", "modal-description").Body(
-														app.Header().Class("p-modal__header").Body(
-															app.H2().Class("p-modal__title").ID("modal-title").Text("Delegate"),
-															app.Button().Class("p-modal__close").Aria("label", "Close active modal").Aria("controls", "modal").Value(a.Solutions[i].ID).OnClick(a.closeDelegateModal),
-														),
-														app.P().ID("modal-description").Text("Select a citizen to represent your vote for this issue:"),
-														app.Div().Class("p-heading-icon--small").Body(
-															app.Range(a.ranks).Slice(func(i int) app.UI {
-																return app.If(a.ranks[i].CitizenID != a.citizenID,
-																	app.Div().Class("p-heading-icon__header").Body(
-																		app.Button().Class("p-chip").Aria("pressed", true).Disabled(true).Body(
-																			app.Span().Class("p-chip__value").Text("Citizen"),
-																			app.Span().Class("p-badge").Aria("label", "Citizen").Text(a.ranks[i].CitizenID),
-																		),
-																		app.Button().Class("p-chip").Aria("pressed", true).Disabled(true).Body(
-																			app.Span().Class("p-chip__value").Text("Reputation"),
-																			app.Span().Class("p-badge").Aria("label", "Reputation").Text(a.ranks[i].ReputationIndex),
-																		),
-																		app.Button().Class("p-chip").Body(
-																			app.Span().Class("p-chip__value").Text("Select"),
-																		).Value(a.ranks[i].CitizenID).OnClick(a.delegate),
 																	),
-																)
-															}),
 														),
-													),
-												),
-											),
+													)													
+												})
+											}).Else( func() app.UI {
+												return app.Div().Class("vote-delegate-container").Body(
+													// Vote Button with Icon
+													app.Button().
+														Class("p-button is-small is-inline").
+														Text("Vote").
+														Value(a.Solutions[i].ID).
+														OnClick(a.vote).
+														Body(
+															app.I().Class("fa-regular fa-thumbs-up"), // Icon for Vote
+														),
+												
+													// Delegate Button
+													app.Button().
+														Class("p-button is-small is-inline").
+														ID("show-modal").
+														Text("Delegate...").
+														Aria("controls", "modal").
+														Value(a.Solutions[i].ID).
+														OnClick(a.openDelegateDialog),
+												
+													// Modal for Delegation
+													app.Div().
+														Class("p-modal").
+														ID("delegate-modal").
+														Style("display", "none"). // Initially hidden
+														Body(
+															app.Section().
+																Class("p-modal__dialog").
+																Role("dialog").
+																Aria("modal", true).
+																Aria("labelledby", "modal-title").
+																Aria("describedby", "modal-description").
+																Body(
+																	app.Header().
+																		Class("p-modal__header").
+																		Body(
+																			app.H2().
+																				Class("p-modal__title").
+																				ID("modal-title").
+																				Text("Delegate"),
+																			app.Button().
+																				Class("p-modal__close").
+																				Aria("label", "Close active modal").
+																				Aria("controls", "modal").
+																				Value(a.Solutions[i].ID).
+																				OnClick(a.closeDelegateModal),
+																		),
+																	app.P().
+																		ID("modal-description").
+																		Text("Select a citizen to represent your vote for this issue:"),
+																	app.Div().
+																		Class("p-heading-icon--small").
+																		Body(
+																			app.Range(a.ranks).Slice(func(i int) app.UI {
+																				return app.If(a.ranks[i].CitizenID != a.citizenID, func() app.UI {
+																					return app.Div().Class("p-heading-icon__header").Body(
+																						app.Button().
+																							Class("p-chip").
+																							Aria("pressed", true).
+																							Disabled(true).
+																							Body(
+																								app.Span().Class("p-chip__value").Text("Citizen"),
+																								app.Span().Class("p-badge").Aria("label", "Citizen").Text(a.ranks[i].CitizenID),
+																							),
+																						app.Button().
+																							Class("p-chip").
+																							Aria("pressed", true).
+																							Disabled(true).
+																							Body(
+																								app.Span().Class("p-chip__value").Text("Reputation"),
+																								app.Span().Class("p-badge").Aria("label", "Reputation").Text(a.ranks[i].ReputationIndex),
+																							),
+																						app.Button().
+																							Class("p-chip").
+																							Body(
+																								app.Span().Class("p-chip__value").Text("Select"),
+																							).Value(a.ranks[i].CitizenID).OnClick(a.delegate),
+																					)
+																				})
+																			}),
+																		),
+																),
+														),
+												)												
+											}),
 										)
 									}),
 								),
 							),
 						),
-					),
-				),
+					)
+				}),
 			),
 		),
 	)
@@ -1021,7 +1138,9 @@ func main() {
 	//
 	// This is done by calling the Route() function,  which tells go-app what
 	// component to display for a given path, on both client and server-side.
-	app.Route("/", &acid{})
+	app.Route("/", func() app.Composer{
+		return &acid{}
+	})
 
 	// Once the routes set up, the next thing to do is to either launch the app
 	// or the server that serves the app.
